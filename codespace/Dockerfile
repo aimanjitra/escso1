@@ -1,16 +1,20 @@
+# ---------- Build stage ----------
 FROM maven:3.9.6-eclipse-temurin-17 AS build
 WORKDIR /app
 
-# now context is codespace/
-COPY my-app ./my-app
+# copy project
+COPY my-app/pom.xml ./my-app/pom.xml
+COPY my-app/src ./my-app/src
+
 WORKDIR /app/my-app
+RUN mvn clean package -DskipTests
 
-RUN mvn clean package
-
+# ---------- Runtime stage ----------
 FROM eclipse-temurin:17-jre
 WORKDIR /app
 
-COPY --from=build /app/my-app/target /app/target
-EXPOSE 8080
+# copy the runnable jar
+COPY --from=build /app/my-app/target/my-app-1.0-SNAPSHOT.jar app.jar
 
-CMD ["java", "-cp", "target/*:target/dependency/*", "com.example.Main"]
+EXPOSE 8080
+CMD ["java", "-jar", "app.jar"]
