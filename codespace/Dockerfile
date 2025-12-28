@@ -2,8 +2,8 @@
 FROM maven:3.9.6-eclipse-temurin-17 AS build
 WORKDIR /app
 
-COPY my-app/pom.xml my-app/pom.xml
-COPY my-app/src my-app/src
+# Copy ENTIRE project
+COPY my-app ./my-app
 
 WORKDIR /app/my-app
 RUN mvn clean package -DskipTests
