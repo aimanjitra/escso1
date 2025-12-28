@@ -4,7 +4,7 @@ FROM maven:3.9.6-eclipse-temurin-17 AS build
 WORKDIR /app
 
 # Copy the Java project
-COPY my-app ./my-app
+COPY codespace/my-app ./my-app
 WORKDIR /app/my-app
 
 RUN mvn clean package
