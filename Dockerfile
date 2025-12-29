@@ -1,15 +1,27 @@
-FROM maven:3.9.6-eclipse-temurin-17 AS build
+# Stage 1: build with JDK21 and install Maven (guarantees Java 21 build)
+FROM eclipse-temurin:21-jdk AS build
+WORKDIR /src
+
+# Install Maven (Debian-based images)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends maven && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy sources
+COPY codespace/my-app/pom.xml my-app/
+COPY codespace/my-app/src ./src
+
+WORKDIR /src/my-app
+
+# Build shaded jar (skip tests)
+RUN mvn -DskipTests clean package
+
+# Stage 2: small runtime image with JRE21
+FROM eclipse-temurin:21-jre
 WORKDIR /app
 
-COPY pom.xml .
-COPY src ./src
-
-RUN mvn clean package -DskipTests
-
-FROM eclipse-temurin:17-jre
-WORKDIR /app
-
-COPY --from=build /app/target/my-app-1.0-SNAPSHOT.jar app.jar
+# Copy the shaded jar from the build stage
+COPY --from=build /src/my-app/target/*-shaded.jar /app/app.jar
 
 EXPOSE 8080
 CMD ["java", "-jar", "app.jar"]
