@@ -617,10 +617,17 @@
     if (strength > paramValue) {
         resultDiv.innerHTML = `
             <div class="error-message gateway-message">
-                <strong>Invalid Configuration</strong><br><br>
-                Interaction strength (t) must not exceed the number of parameters (k).<br>
-                Required condition: <strong>t ≤ k</strong>
-            </div>
+    <strong>Invalid Configuration</strong>
+
+    <p>
+        Interaction strength (t) must not exceed the number of parameters (k).
+    </p>
+
+    <p>
+        Required condition:
+        <strong>t ≤ k</strong>
+    </p>
+</div>
         `;
         document.getElementById("testCount").innerText = "0 test cases";
         return;
