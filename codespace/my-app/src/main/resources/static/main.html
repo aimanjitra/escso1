@@ -553,105 +553,76 @@
     let numInputs = parseInt(document.getElementById("numInputs").value);
     let paramValue = parseInt(document.getElementById("paramValue").value);
 
-    // Validate that numInputs is not less than strength
-    if (numInputs < strength) {
-        const resultDiv = document.getElementById("result");
-        resultDiv.innerHTML = '<div class="error-message">Error: Number of Inputs (' + numInputs + 
-                             ') cannot be less than Strength (' + strength + 
-                             ').<br>Number of Inputs must be ≥ Strength.</div>';
-        
-        // Reset test count
-        document.getElementById("testCount").innerText = "0 test cases";
-        
-        // Hide export buttons
-        document.getElementById("printBtn").style.display = "none";
-        document.getElementById("downloadBtn").style.display = "none";
-        
-        return; // Stop further execution
-    }
-
     let baseUrl = "/generate";
     let params = `?strength=${strength}&numInputs=${numInputs}&paramValue=${paramValue}`;
 
-    // Show loading state with animation
     const resultDiv = document.getElementById("result");
     resultDiv.innerHTML = `
         <div class="loading-message">
             <div class="loading-spinner"></div>
-            <div>Calculating test suite...<br><small>Please wait while the codespace processes your request</small></div>
+            <div>
+                Calculating test suite...<br>
+                <small>Please wait while the codespace processes your request</small>
+            </div>
         </div>
     `;
-    
-    // Disable the generate button during loading
+
     const generateBtn = document.querySelector('.generate-btn');
     const originalText = generateBtn.textContent;
     generateBtn.textContent = 'Processing...';
     generateBtn.disabled = true;
-    
+
     try {
-        // Add timeout for the request (5.5 minutes = 330 seconds)
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000000); // 330,000 ms = 5.5 minutes
-        
-        const response = await fetch(baseUrl + params, {
-            signal: controller.signal
-        });
-        
-        clearTimeout(timeoutId);
-        
+        const response = await fetch(baseUrl + params);
+
         if (!response.ok) {
             throw new Error(`Server error: ${response.status} ${response.statusText}`);
         }
-        
+
         const result = await response.text();
 
-        // Check if the result contains error messages from the server
-        if (result.includes("Error") || result.includes("error") || result.includes("Exception")) {
+        if (
+            result.includes("Error") ||
+            result.includes("error") ||
+            result.includes("Exception")
+        ) {
             throw new Error(`System error: ${result.substring(0, 200)}...`);
         }
 
-        // Remove the loading div and set the result
         resultDiv.innerHTML = '';
         resultDiv.textContent = result;
-        
-        // Update test case count
-        let count = result.split("\n").filter(line => /^\d+\)/.test(line)).length;
-        document.getElementById("testCount").innerText = `${count} test cases`;
 
+        let count = result
+            .split("\n")
+            .filter(line => /^\d+\)/.test(line)).length;
+
+        document.getElementById("testCount").innerText = `${count} test cases`;
         document.getElementById("printBtn").style.display = "block";
         document.getElementById("downloadBtn").style.display = "block";
-        
+
     } catch (error) {
         console.error('Error details:', error);
-        
+
         let errorMessage = '';
-        
-        if (error.name === 'AbortError') {
-            errorMessage = 'Error: Request timed out. The calculation is taking too long. Please try with smaller values or try again later.';
-        } else if (error.message.includes('System error:')) {
-            // Extract the system error message
-            errorMessage = 'System Error: ' + error.message.replace('System error:', '');
-            if (errorMessage.length > 300) {
-                errorMessage = errorMessage.substring(0, 300) + '...';
-            }
+
+        if (
+            error.message.includes('Failed to fetch') ||
+            error.message.includes('NetworkError')
+        ) {
+            errorMessage =
+                'Connection Error: Cannot connect to the server. The codespace may be unavailable or restarting.';
         } else if (error.message.includes('Server error:')) {
-            errorMessage = 'Server Error: ' + error.message.replace('Server error:', '') + '. Please try again.';
-        } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-            errorMessage = 'Connection Error: Cannot connect to the server. The codespace may be unavailable, starting up, or experiencing issues. Please try again in a few moments.';
+            errorMessage = 'Server Error: ' + error.message.replace('Server error:', '');
         } else {
-            errorMessage = 'Unexpected Error: ' + error.message + '. Please try again.';
+            errorMessage = 'Unexpected Error: ' + error.message;
         }
-        
+
         resultDiv.innerHTML = `<div class="error-message">${errorMessage}</div>`;
-        
-        // Reset test count
         document.getElementById("testCount").innerText = "0 test cases";
-        
-        // Hide export buttons
         document.getElementById("printBtn").style.display = "none";
         document.getElementById("downloadBtn").style.display = "none";
+
     } finally {
-        // Re-enable the generate button
         generateBtn.textContent = originalText;
         generateBtn.disabled = false;
     }
