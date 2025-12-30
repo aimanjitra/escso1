@@ -564,7 +564,7 @@
     const generateBtn = document.querySelector('.generate-btn');
 
     resultDiv.innerHTML = `
-        <div class="error-message">
+        <div class="error-message gateway-message">
             <strong>Service Temporarily Unavailable</strong><br><br>
             The system encountered a gateway error (502).<br>
             This usually happens when the service is restarting or
@@ -601,7 +601,7 @@
     // ❌ Theory violation: t > k
     if (strength > paramValue) {
         resultDiv.innerHTML = `
-            <div class="error-message">
+            <div class="error-message gateway-message">
                 <strong>Invalid Configuration</strong><br><br>
                 Interaction strength (t) must not exceed the number of parameters (k).<br>
                 Required condition: <strong>t ≤ k</strong>.
@@ -665,7 +665,7 @@
         console.error('Error details:', error);
 
         resultDiv.innerHTML = `
-            <div class="error-message">
+            <div class="error-message gateway-message">
                 <strong>Execution Failed</strong><br><br>
                 ${error.message}<br><br>
                 Please try a smaller configuration.
