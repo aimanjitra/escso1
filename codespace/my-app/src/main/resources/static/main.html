@@ -177,6 +177,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    text-align: center;      /* text center */
     height: 100%;
     min-height: 200px;
 }
@@ -323,6 +324,16 @@
             transform: translateY(-2px);
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
         }
+
+        .gateway-message {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
 
         .footer {
             margin-top: 50px;
@@ -551,14 +562,15 @@
 
         function handleGatewayError(retryFn) {
     const resultDiv = document.getElementById("result");
+    const generateBtn = document.querySelector('.generate-btn');
 
     resultDiv.innerHTML = `
-        <div class="error-message">
+        <div class="error-message gateway-message">
             <strong>Service Temporarily Unavailable</strong><br><br>
             The system encountered a gateway error (502).<br>
             This usually happens when the service is restarting or
             the computation is very heavy.<br><br>
-            <em>The system will retry automatically in 5 minutes.</em>
+            <em>Retrying automatically in 1 minute 40 seconds...</em>
         </div>
     `;
 
@@ -566,23 +578,47 @@
     document.getElementById("printBtn").style.display = "none";
     document.getElementById("downloadBtn").style.display = "none";
 
-    // ⏳ Auto retry after 5 minutes
+    // 🔓 Re-enable button so retry works
+    generateBtn.disabled = false;
+    generateBtn.textContent = "Generate Test Suite";
+
+    // ⏳ 1 minute 40 seconds retry
     setTimeout(() => {
         retryFn();
-    }, 100000); // 5 minutes
+    }, 100000);
 }
 
         async function submitForm() {
     let strength = parseInt(document.getElementById("strength").value);
-    let numInputs = parseInt(document.getElementById("numInputs").value);
-    let paramValue = parseInt(document.getElementById("paramValue").value);
+    let numInputs = parseInt(document.getElementById("numInputs").value); // v (values)
+    let paramValue = parseInt(document.getElementById("paramValue").value); // k (parameters)
+
+    const resultDiv = document.getElementById("result");
+
+    /* ===============================
+       EARLY LOGIC CHECK (NO SERVER)
+       =============================== */
+
+    // ❌ Theory violation: t > k
+    if (strength > paramValue) {
+        resultDiv.innerHTML = `
+            <div class="error-message gateway-message">
+                <strong>Invalid Configuration</strong><br><br>
+                Interaction strength (t) must not exceed the number of parameters (k).<br>
+                Required condition: <strong>t ≤ k</strong>.
+            </div>
+        `;
+        document.getElementById("testCount").innerText = "0 test cases";
+        return;
+    }
+
+    /* ===============================
+       SAFE TO CALL SERVER
+       =============================== */
 
     let baseUrl = "/generate";
     let params = `?strength=${strength}&numInputs=${numInputs}&paramValue=${paramValue}`;
 
-    const resultDiv = document.getElementById("result");
-
-    // Show loading state
     resultDiv.innerHTML = `
         <div class="loading-message">
             <div class="loading-spinner"></div>
@@ -601,19 +637,12 @@
     try {
         const response = await fetch(baseUrl + params);
 
-        // 🚨 Gateway / Render / Codespace issue
-        if (response.status === 502) {
-            handleGatewayError(submitForm);
-            return;
-        }
-
         if (!response.ok) {
             throw new Error(`Server error: ${response.status} ${response.statusText}`);
         }
 
         const result = await response.text();
 
-        // Catch backend-thrown exceptions
         if (
             result.includes("Error") ||
             result.includes("error") ||
@@ -622,7 +651,6 @@
             throw new Error(result.substring(0, 200));
         }
 
-        // Display result
         resultDiv.innerHTML = '';
         resultDiv.textContent = result;
 
@@ -637,31 +665,14 @@
     } catch (error) {
         console.error('Error details:', error);
 
-        // 🚨 Handle gateway-style failures
-        if (
-            error.message.includes("502") ||
-            error.message.includes("Bad Gateway")
-        ) {
-            handleGatewayError(submitForm);
-            return;
-        }
+        resultDiv.innerHTML = `
+            <div class="error-message gateway-message">
+                <strong>Execution Failed</strong><br><br>
+                ${error.message}<br><br>
+                Please try a smaller configuration.
+            </div>
+        `;
 
-        // Other errors
-        let errorMessage = '';
-
-        if (
-            error.message.includes('Failed to fetch') ||
-            error.message.includes('NetworkError')
-        ) {
-            errorMessage =
-                'Connection Error: Unable to reach the server. Please try again shortly.';
-        } else if (error.message.includes('Server error:')) {
-            errorMessage = error.message;
-        } else {
-            errorMessage = 'Unexpected Error: ' + error.message;
-        }
-
-        resultDiv.innerHTML = `<div class="error-message">${errorMessage}</div>`;
         document.getElementById("testCount").innerText = "0 test cases";
         document.getElementById("printBtn").style.display = "none";
         document.getElementById("downloadBtn").style.display = "none";
