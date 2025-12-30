@@ -210,6 +210,12 @@
     text-align: center;
 }
 
+/* ✅ Force all gateway / error messages to be visually centered */
+.gateway-message {
+    max-width: 520px;          /* fixes visual drift */
+    margin: 0 auto;            /* centers the block itself */
+}
+
         .input-group {
             margin-bottom: 25px;
             position: relative;
@@ -282,16 +288,14 @@
             font-size: 1.4rem;
         }
 
-        .test-count {
-    background: linear-gradient(135deg, #FFD700, #C9A227);
-    color: #1A1A1A;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 0.95rem;
-    font-weight: 800;              /* 🔥 bold */
-    letter-spacing: 0.5px;
-    box-shadow: 0 0 10px rgba(255, 215, 0, 0.45);
-}
+        .test-count { 
+        background: rgba(229, 228, 226, 0.2); 
+        padding: 5px 12px; 
+        border-radius: 20px; 
+        font-size: 0.9rem; 
+        color: #C9A227; 
+        font-weight: 700;              /* 🔥 bold */
+        }
 
         .result-container {
             flex: 1;
@@ -615,7 +619,7 @@
             <div class="error-message gateway-message">
                 <strong>Invalid Configuration</strong><br><br>
                 Interaction strength (t) must not exceed the number of parameters (k).<br>
-                Required condition: <strong>t ≤ k</strong>.
+                Required condition: <strong>t ≤ k</strong>
             </div>
         `;
         document.getElementById("testCount").innerText = "0 test cases";
