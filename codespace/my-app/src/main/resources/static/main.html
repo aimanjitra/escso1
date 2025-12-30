@@ -287,6 +287,7 @@
             line-height: 1.5;
             display: flex;
             justify-content: center;
+            align-items: center;
         }
 
         .awaiting-config {
@@ -548,6 +549,29 @@
                 `${strength}, ${numInputs}<sup>${paramValue}</sup>`;
         }
 
+        function handleGatewayError(retryFn) {
+    const resultDiv = document.getElementById("result");
+
+    resultDiv.innerHTML = `
+        <div class="error-message">
+            <strong>Service Temporarily Unavailable</strong><br><br>
+            The system encountered a gateway error (502).<br>
+            This usually happens when the service is restarting or
+            the computation is very heavy.<br><br>
+            <em>The system will retry automatically in 5 minutes.</em>
+        </div>
+    `;
+
+    document.getElementById("testCount").innerText = "0 test cases";
+    document.getElementById("printBtn").style.display = "none";
+    document.getElementById("downloadBtn").style.display = "none";
+
+    // ⏳ Auto retry after 5 minutes
+    setTimeout(() => {
+        retryFn();
+    }, 100000); // 5 minutes
+}
+
         async function submitForm() {
     let strength = parseInt(document.getElementById("strength").value);
     let numInputs = parseInt(document.getElementById("numInputs").value);
@@ -557,12 +581,14 @@
     let params = `?strength=${strength}&numInputs=${numInputs}&paramValue=${paramValue}`;
 
     const resultDiv = document.getElementById("result");
+
+    // Show loading state
     resultDiv.innerHTML = `
         <div class="loading-message">
             <div class="loading-spinner"></div>
             <div>
                 Calculating test suite...<br>
-                <small>Please wait while the codespace processes your request</small>
+                <small>Please wait while the system processes your request</small>
             </div>
         </div>
     `;
@@ -575,20 +601,28 @@
     try {
         const response = await fetch(baseUrl + params);
 
+        // 🚨 Gateway / Render / Codespace issue
+        if (response.status === 502) {
+            handleGatewayError(submitForm);
+            return;
+        }
+
         if (!response.ok) {
             throw new Error(`Server error: ${response.status} ${response.statusText}`);
         }
 
         const result = await response.text();
 
+        // Catch backend-thrown exceptions
         if (
             result.includes("Error") ||
             result.includes("error") ||
             result.includes("Exception")
         ) {
-            throw new Error(`System error: ${result.substring(0, 200)}...`);
+            throw new Error(result.substring(0, 200));
         }
 
+        // Display result
         resultDiv.innerHTML = '';
         resultDiv.textContent = result;
 
@@ -603,6 +637,16 @@
     } catch (error) {
         console.error('Error details:', error);
 
+        // 🚨 Handle gateway-style failures
+        if (
+            error.message.includes("502") ||
+            error.message.includes("Bad Gateway")
+        ) {
+            handleGatewayError(submitForm);
+            return;
+        }
+
+        // Other errors
         let errorMessage = '';
 
         if (
@@ -610,9 +654,9 @@
             error.message.includes('NetworkError')
         ) {
             errorMessage =
-                'Connection Error: Cannot connect to the server. The codespace may be unavailable or restarting.';
+                'Connection Error: Unable to reach the server. Please try again shortly.';
         } else if (error.message.includes('Server error:')) {
-            errorMessage = 'Server Error: ' + error.message.replace('Server error:', '');
+            errorMessage = error.message;
         } else {
             errorMessage = 'Unexpected Error: ' + error.message;
         }
