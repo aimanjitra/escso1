@@ -194,12 +194,20 @@
 .error-message {
     color: #ff6b6b;
     font-size: 1.1rem;
-    text-align: center;
+
     width: 100%;
+    height: 100%;
+
     padding: 40px 20px;
     border: 1px solid rgba(255, 107, 107, 0.3);
     border-radius: 8px;
     background: rgba(255, 107, 107, 0.1);
+
+    display: flex;                 /* ✅ KEY */
+    flex-direction: column;        /* ✅ KEY */
+    justify-content: center;        /* ✅ vertical center */
+    align-items: center;            /* ✅ horizontal center */
+    text-align: center;
 }
 
         .input-group {
@@ -275,12 +283,15 @@
         }
 
         .test-count {
-            background: rgba(229, 228, 226, 0.2);
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            color: var(--platinum-primary);
-        }
+    background: linear-gradient(135deg, #FFD700, #C9A227);
+    color: #1A1A1A;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.95rem;
+    font-weight: 800;              /* 🔥 bold */
+    letter-spacing: 0.5px;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.45);
+}
 
         .result-container {
             flex: 1;
@@ -652,6 +663,11 @@
 
         resultDiv.innerHTML = '';
         resultDiv.textContent = result;
+
+        // Force top alignment & reset scroll
+        resultDiv.style.alignItems = "flex-start";
+        resultDiv.style.justifyContent = "flex-start";
+        resultDiv.scrollTop = 0;
 
         let count = result
             .split("\n")
