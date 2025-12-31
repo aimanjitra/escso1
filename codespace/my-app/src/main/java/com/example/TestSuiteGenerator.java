@@ -140,8 +140,6 @@ public class TestSuiteGenerator {
         }
 
         StringBuilder result = new StringBuilder();
-        result.append("Total Test Cases Generated: ").append(count - 1).append("\n\n");
-        result.append("Generated Result Set:\n");
         result.append(testCasesOutput);
 
         return result.toString();
