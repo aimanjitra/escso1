@@ -6,10 +6,10 @@ import java.awt.Point;
 public class TestCase implements Comparable<TestCase> {
    private int[] tc;
    private Point p;
-   public double fitness;
+   public int fitness;
    private static boolean descendingOrder = false;
 
-   public TestCase(int[] tc, Point p, double fitness) {
+   public TestCase(int[] tc, Point p, int fitness) {
       this.tc = (int[])tc.clone();
       this.p = new Point(p);
       this.fitness = fitness;
@@ -44,7 +44,7 @@ public class TestCase implements Comparable<TestCase> {
       return this.p;
    }
 
-   public double getFitness() {
+   public int getFitness() {
       return this.fitness;
    }
 
@@ -76,10 +76,8 @@ public class TestCase implements Comparable<TestCase> {
    }
 
    public int compareTo(TestCase o) {
-    return descendingOrder
-            ? Double.compare(o.getFitness(), this.getFitness())
-            : Double.compare(this.getFitness(), o.getFitness());
-}
+      return descendingOrder ? o.getFitness() - this.fitness : this.fitness - o.getFitness();
+   }
 
    public TestCase clone() {
       return new TestCase((int[])this.tc.clone(), new Point(this.p.x, this.p.y), this.fitness);

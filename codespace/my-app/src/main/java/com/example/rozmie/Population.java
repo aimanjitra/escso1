@@ -1,5 +1,5 @@
+// Source code is decompiled from a .class file using FernFlower decompiler.
 package com.example.rozmie;
-
 import java.util.Comparator;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,20 +24,18 @@ public class Population {
     }
 
     public void addNewPopulation(int[] tc) {
-        // assume calculateWeight returns double; adapt if it returns int
-        double weight = this.tl.calculateWeight(tc);
-        TestCase tempTC = new TestCase(tc, this.tco.convertTCToPoint(tc), weight);
+        TestCase tempTC = new TestCase(tc, this.tco.convertTCToPoint(tc), this.tl.calculateWeight(tc));
         this.addNewPopulation(tempTC);
     }
 
-    // Sort ascending by fitness (fitness is double)
+    // ✅ FIX: Use Comparator instead of invalid "new 1(this)"
     public void sortAscending() {
-        Collections.sort(this.myPopulation, Comparator.comparingDouble(tc -> tc.fitness));
+        Collections.sort(this.myPopulation, Comparator.comparingInt(tc -> tc.fitness));
     }
 
-    // Sort descending by fitness (fitness is double)
+    // ✅ FIX: Use Comparator for descending order
     public void sortDescending() {
-        Collections.sort(this.myPopulation, (tc1, tc2) -> Double.compare(tc2.fitness, tc1.fitness));
+        Collections.sort(this.myPopulation, (tc1, tc2) -> Integer.compare(tc2.fitness, tc1.fitness));
     }
 
     public TestCase getPopulationByIndex(int index) {
@@ -45,23 +43,22 @@ public class Population {
     }
 
     public TestCase getLowestFitnessPopulation() {
-        return Collections.min(this.myPopulation, Comparator.comparingDouble(tc -> tc.fitness));
+        return Collections.min(this.myPopulation, Comparator.comparingInt(tc -> tc.fitness));
     }
 
     public TestCase getHighestFitnessPopulation() {
-        return Collections.max(this.myPopulation, Comparator.comparingDouble(tc -> tc.fitness));
+        return Collections.max(this.myPopulation, Comparator.comparingInt(tc -> tc.fitness));
     }
 
     public int getPopulationSize() {
         return this.myPopulation.size();
     }
 
-    // now return double because fitness is double
-    public double getLowestFitness() {
+    public int getLowestFitness() {
         return this.getLowestFitnessPopulation().fitness;
     }
 
-    public double getHighestFitness() {
+    public int getHighestFitness() {
         return this.getHighestFitnessPopulation().fitness;
     }
 
