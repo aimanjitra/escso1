@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SandCatGo - Platinum Test Suite Generator</title>
-
+    <link rel="icon" type="image/png" href="/images/ec2e0992-64c8-4940-90fe-1a89ec77c7fe.png">
     <!-- html2canvas for PNG Export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
@@ -493,13 +493,16 @@
             </div>
 
             <div class="input-group">
-                <label for="numInputs">Number of Inputs:</label>
-                <input type="number" id="numInputs" value="2" oninput="updateFormula()">
-            </div>
-
-            <div class="input-group">
-                <label for="paramValue">Value of Parameter:</label>
-                <input type="number" id="paramValue" value="2" oninput="updateFormula()">
+                <label for="values">
+                    Parameter Values (comma-separated):
+                </label>
+                <input
+                    type="text"
+                    id="values"
+                    value="2,2,2"
+                    placeholder="Example: 3,2,2"
+                    oninput="updateFormula()"
+                >
             </div>
 
             <button class="generate-btn" onclick="submitForm()">Generate Test Suite</button>
@@ -567,11 +570,25 @@
 
         function updateFormula() {
             const strength = document.getElementById("strength").value;
-            const numInputs = document.getElementById("numInputs").value;
-            const paramValue = document.getElementById("paramValue").value;
+            const valuesRaw = document.getElementById("values").value;
+
+            if (!valuesRaw) {
+                document.getElementById("formulaDisplay").innerHTML = "—";
+                return;
+            }
+
+            const values = valuesRaw.split(",").map(v => v.trim());
+
+            // Build symbolic representation: 3×2²
+            const freq = {};
+            values.forEach(v => freq[v] = (freq[v] || 0) + 1);
+
+            const config = Object.entries(freq)
+                .map(([val, count]) => count > 1 ? `${val}<sup>${count}</sup>` : val)
+                .join(" × ");
 
             document.getElementById("formulaDisplay").innerHTML =
-                `${strength}, ${numInputs}<sup>${paramValue}</sup>`;
+                `${strength}, ${config}`;
         }
 
         function handleGatewayError(retryFn) {
@@ -604,27 +621,45 @@
 
         async function submitForm() {
     let strength = parseInt(document.getElementById("strength").value);
-    let numInputs = parseInt(document.getElementById("numInputs").value); // v (values)
-    let paramValue = parseInt(document.getElementById("paramValue").value); // k (parameters)
+    let valuesRaw = document.getElementById("values").value.trim();
+
 
     const resultDiv = document.getElementById("result");
 
     /* ===============================
        EARLY LOGIC CHECK (NO SERVER)
        =============================== */
+    if (!valuesRaw) {
+    resultDiv.innerHTML = `
+        <div class="error-message gateway-message">
+            <strong>Invalid Configuration</strong><br><br>
+            Please enter parameter values.<br>
+            Example: <code>3,2,2</code>
+        </div>
+    `;
+    document.getElementById("testCount").innerText = "0 test cases";
+    return;
+    }
 
-    // ❌ Theory violation: t > k
-    if (strength > paramValue) {
+    let valuesArray = valuesRaw.split(",").map(v => v.trim());
+
+    if (valuesArray.some(v => isNaN(v) || parseInt(v) <= 0)) {
         resultDiv.innerHTML = `
             <div class="error-message gateway-message">
-    <strong>Invalid Configuration</strong>
+                <strong>Invalid Values</strong><br><br>
+                All values must be positive integers.
+            </div>
+        `;
+        document.getElementById("testCount").innerText = "0 test cases";
+        return;
+    }
 
-    <p>Interaction strength (t) must not exceed the value of parameters (k).
-    </p>
-
-    <p>Required condition:</p>
-    <strong>t ≤ k</strong>
-</div>
+    if (strength > valuesArray.length) {
+        resultDiv.innerHTML = `
+            <div class="error-message gateway-message">
+                <strong>Invalid Configuration</strong><br><br>
+                Interaction strength (t) must not exceed number of parameters (k).
+            </div>
         `;
         document.getElementById("testCount").innerText = "0 test cases";
         return;
@@ -635,7 +670,7 @@
        =============================== */
 
     let baseUrl = "/generate";
-    let params = `?strength=${strength}&numInputs=${numInputs}&paramValue=${paramValue}`;
+    let params = `?strength=${strength}&values=${encodeURIComponent(valuesRaw)}`;
 
     resultDiv.innerHTML = `
         <div class="loading-message">
@@ -690,9 +725,9 @@
 
         resultDiv.innerHTML = `
             <div class="error-message gateway-message">
-                <strong>Execution Failed</strong><br><br>
-                ${error.message}<br><br>
-                Please try a smaller configuration.
+                <strong>Execution Failed</strong>
+                <p>${error.message}</p>
+                <p>Please try a smaller configuration.</p>
             </div>
         `;
 
@@ -720,9 +755,6 @@
         }
 
         function downloadText() {
-            let strength = document.getElementById("strength").value;
-            let numInputs = document.getElementById("numInputs").value;
-            let paramValue = document.getElementById("paramValue").value;
 
             let raw = document.getElementById("result").innerText;
 
@@ -733,7 +765,7 @@
 
             let count = cleaned.split("\n").filter(line => /^\d+\)/.test(line)).length;
 
-            let header = `SandCatGo Platinum Test Suite\nConfiguration: t(strength)-${strength}, ${numInputs}^${paramValue}\n\n`;
+            let header = `SandCatGo Platinum Test Suite\nConfiguration: t=${strength}, values=[${valuesRaw}]\n\n`;
             let footer = `\n\nCompleted with ${count} test cases.`;
 
             let finalText = header + cleaned + footer;

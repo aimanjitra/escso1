@@ -1,100 +1,68 @@
 package com.example;
 import static spark.Spark.*;
-import java.util.Arrays;
 
 public class Main {
     public static void main(String[] args) {
-        // Read port from environment (e.g., Render sets PORT). Fallback to 8080 for local testing.
-        String portEnv = System.getenv("PORT");
-        int port = (portEnv != null && !portEnv.isBlank()) ? Integer.parseInt(portEnv) : 8080;
+        port(8080);
 
-        ipAddress("0.0.0.0");
-        port(port);
-
-        // Serve static files from src/main/resources/static
-        // e.g., main.html will be available at /main.html
-        staticFiles.location("/static");
-
-        // Redirect root to the UI page
-        get("/", (req, res) -> {
-            res.redirect("/main.html");
-            return null;
-        });
-
-        // Enable simple CORS for all routes (so frontend on same or different origin can call)
+        // Enable CORS
         options("/*", (req, res) -> {
-            String reqHeaders = req.headers("Access-Control-Request-Headers");
-            if (reqHeaders != null) res.header("Access-Control-Allow-Headers", reqHeaders);
-            String reqMethod = req.headers("Access-Control-Request-Method");
-            if (reqMethod != null) res.header("Access-Control-Allow-Methods", reqMethod);
             res.header("Access-Control-Allow-Origin", "*");
+            res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+            res.header("Access-Control-Allow-Headers", "Content-Type");
             return "OK";
         });
 
-        before((req, res) -> {
-            res.header("Access-Control-Allow-Origin", "*");
-        });
+        before((req, res) -> res.header("Access-Control-Allow-Origin", "*"));
 
-        // Health check endpoint
-        get("/health", (req, res) -> "OK");
+        // Default route
+        get("/", (req, res) -> "SCSO Test Suite Generator is running!");
 
-        // Main generate endpoint
+        // API endpoint for test suite generation
         get("/generate", (req, res) -> {
-            String strengthS = req.queryParams("strength");
-            String numInputsS = req.queryParams("numInputs");
-            String paramValueS = req.queryParams("paramValue");
-
-            // Basic validation
-            if (strengthS == null || numInputsS == null || paramValueS == null) {
-                res.status(400);
-                return "[ERROR] Missing parameters: strength, numInputs, paramValue";
-            }
-
             try {
-                int strength = Integer.parseInt(strengthS);
-                int numInputs = Integer.parseInt(numInputsS);
-                int paramValue = Integer.parseInt(paramValueS);
+                // Get parameters
+                String strengthStr = req.queryParams("strength");
+                String valuesStr = req.queryParams("values");
 
-                if (strength <= 0 || numInputs <= 0 || paramValue <= 0) {
+                // Log received parameters
+                System.out.println("[DEBUG] Received: strength=" + strengthStr + ", values=" + valuesStr);
+
+
+                // Validate input
+                if (strengthStr == null || valuesStr == null) {
                     res.status(400);
-                    return "[ERROR] Parameters must be positive integers";
+                    return "[ERROR] Missing parameters: strength, numInputs, paramValue";
                 }
 
-                // Build the value[] array: length = numInputs, each entry = paramValue
-                // (Your generator's constructor expects an int[] describing number of values per input)
-                // Generate value array based on numInputs and paramValue (match GitHub Codespace)
-                int[] value = new int[paramValue];
-                for (int i = 0; i < paramValue; i++) {
-                    value[i] = numInputs;
+                // Convert parameters
+                int strength = Integer.parseInt(strengthStr);
+                
+                String[] parts = valuesStr.split(",");
+                int[] value = new int[parts.length];
+
+                for (int i = 0; i < parts.length; i++) {
+                    value[i] = Integer.parseInt(parts[i].trim());
                 }
 
-                System.out.println("[DEBUG] /generate called with strength=" + strength
-                        + " numInputs=" + numInputs + " paramValue=" + paramValue);
-                System.out.println("[DEBUG] value[] = " + Arrays.toString(value));
 
-                // Construct and run the generator (synchronously)
+                // Call TestSuiteGenerator
                 TestSuiteGenerator generator = new TestSuiteGenerator(value, strength);
+                String result = generator.generateTestSuite();
 
-                long start = System.currentTimeMillis();
-                String result = generator.generateTestSuite(); // may take time for large inputs
-                long elapsed = System.currentTimeMillis() - start;
-
-                System.out.println("[INFO] Generation finished in " + elapsed + " ms. Result length=" + (result == null ? 0 : result.length()));
+                // Log success
+                System.out.println("[SUCCESS] Test suite generated:\n" + result);
 
                 res.type("text/plain");
                 return result;
 
-            } catch (NumberFormatException nfe) {
-                res.status(400);
-                return "[ERROR] Invalid numeric parameters: " + nfe.getMessage();
             } catch (Exception e) {
-                e.printStackTrace();
+                System.err.println("[ERROR] Exception: " + e.getMessage());
                 res.status(500);
-                return "[ERROR] Internal Server Error: " + e.toString();
+                return "[ERROR] Internal Server Error: " + e.getMessage();
             }
         });
 
-        System.out.println("✅ Server started on port " + port + " (0.0.0.0).");
-        System.out.println("✅ UI available at: http://<host>:" + port + "/main.html");
+        System.out.println("✅ Server started on port 8080...");
     }
 }
