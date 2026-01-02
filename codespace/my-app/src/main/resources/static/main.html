@@ -585,7 +585,7 @@
 
             const config = Object.entries(freq)
                 .map(([val, count]) => count > 1 ? `${val}<sup>${count}</sup>` : val)
-                .join(" × ");
+                .join("");
 
             document.getElementById("formulaDisplay").innerHTML =
                 `${strength}, ${config}`;
