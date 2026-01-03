@@ -1730,23 +1730,14 @@ if (strength > paramValue) {
             const baseUrl = "/generate";
             const url = `${baseUrl}?strength=${strength}&values=${valuesStr}`;
 
-                try {
-                    const res = await fetch(url);
-                    raw = await res.text();
-                } catch (e) {
-                    document.getElementById('testCasesSection').style.display = 'block';
-                    document.getElementById('testCasesCount').innerHTML = `
-                        <div class="error-message gateway-message">
-                            <strong>Service Temporarily Unavailable</strong>
-                            <p>Please try again in a moment.</p>
-                        </div>
-                    `;
-                    return;
-                }
-
             let raw;
             try {
                 const res = await fetch(url);
+
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status}`);
+                }
+
                 raw = await res.text();
             } catch (e) {
                 document.getElementById('testCasesSection').style.display = 'block';
@@ -1758,6 +1749,7 @@ if (strength > paramValue) {
                 `;
                 return;
             }
+
             lastRawResult = raw;
             lastStrength = strength;
             lastValues = values;
@@ -1788,24 +1780,25 @@ if (strength > paramValue) {
         }
 
         function decodeBackendResult(raw, validParams) {
-            const lines = raw.split("\n");
+    const lines = raw.split("\n");
 
-            return lines.map(line => {
-                if (!line.match(/^\d+\)/)) return line;
+    return lines.map(line => {
+        if (!line.match(/^\d+\)/)) return line;
 
-                const nums = line
-                    .replace(/^\d+\)\s*/, "")
-                    .trim()
-                    .split(/\s+/)
-                    .map(Number);
+        const nums = line
+            .replace(/^\d+\)\s*/, "")
+            .trim()
+            .split(/\s+/)
+            .map(Number);
 
-                const names = nums.map((n, i) =>
-                    inputEncoding[i].numToName[n]
-                );
+        const names = nums.map((n, i) => {
+            const originalIndex = parameters.indexOf(validParams[i]);
+            return inputEncoding[originalIndex].numToName[n];
+        });
 
-                return `${line.split(")")[0]}) ${names.join(", ")}`;
-            });
-        }
+        return `${line.split(")")[0]}) ${names.join(", ")}`;
+    });
+}
 
         function renderDecodedResults(results, strength) {
             const section = document.getElementById('testCasesSection');
