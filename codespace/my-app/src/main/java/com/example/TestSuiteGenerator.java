@@ -142,7 +142,7 @@ public class TestSuiteGenerator {
         StringBuilder result = new StringBuilder();
         result.append(testCasesOutput);
 
-        return result.toString();
+        return result.toString().trim();
     }
 
     public static void initializeRoulleteWheel() {
