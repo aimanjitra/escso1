@@ -858,6 +858,7 @@
             border: 1px solid #a7f3d0;
             margin-top: 25px;
             display: none;
+            align-items: center;
         }
         
         .test-cases-title {
@@ -1949,29 +1950,29 @@ if (strength > paramValue) {
         }
 
         function downloadTextB() {
-            if (!lastRawResult) {
-                alert("No test suite generated yet.");
-                return;
-            }
+    if (!lastRawResult) {
+        alert("No test suite generated yet.");
+        return;
+    }
 
-            let cleaned = decodeRawResultToNames(lastRawResult);
-            let count = cleaned.split("\n").length;
+    let cleaned = decodeRawResultToNames(lastRawResult);
+    let count = cleaned.split("\n").length;
 
-            let header =
-        `Test Suite
-        Interaction Strength (t): ${lastStrength}
-        Values: [${lastValues.join(", ")}]`;
+    let header =
+`Test Suite
+Interaction Strength (t): ${lastStrength}
+Values: [${lastValues.join(", ")}]`;
 
-            let footer = `Completed with ${count} test cases.`;
+    let footer = `Completed with ${count} test cases.`;
 
-            let finalText = `${header}\n\n${cleaned}\n\n${footer}`;
+    let finalText = `${header}\n\n${cleaned}\n\n${footer}`;
 
-            let blob = new Blob([finalText], { type: "text/plain" });
-            let link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = "TestSuite.txt";
-            link.click();
-        }
+    let blob = new Blob([finalText], { type: "text/plain" });
+    let link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "TestSuite.txt";
+    link.click();
+}
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
