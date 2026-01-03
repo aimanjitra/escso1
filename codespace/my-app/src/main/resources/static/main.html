@@ -163,26 +163,6 @@
     animation: loading-spinner 1.2s linear infinite;
 }
 
-/* ✅ Fix Option B result centering cleanly */
-#testCasesSection {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-/* limit width so it looks centered */
-#testCasesContainer {
-    width: 100%;
-    max-width: 900px;
-}
-
-/* center each test case visually */
-#testCasesContainer .test-case {
-    max-width: 100%;
-}
-
-
 @keyframes loading-spinner {
     0% {
         transform: rotate(0deg);
@@ -1162,7 +1142,6 @@
                 <button class="generate-btn" onclick="generateTestCasesBackend()">Generate Test Cases</button>
             </div>
         </div>
-        </div>
         
         <!-- Test Cases Output -->
         <div class="test-cases-section" id="testCasesSection">
@@ -1177,6 +1156,7 @@
                             <button class="generate-btn" onclick="downloadTextB()">Save as TXT</button>
                         </div>
             </div>
+        </div>
         </div>
 </div>
 
