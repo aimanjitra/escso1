@@ -1685,11 +1685,18 @@
         async function generateTestCasesBackend() {
             const strength = parseInt(document.getElementById('strengthInput').value) || 2;
 
+                const section = document.getElementById('testCasesSection');
+                const container = document.getElementById('testCasesContainer');
+                const count = document.getElementById('testCasesCount');
+                const generateBtn = document.querySelector('#strengthSection .generate-btn');
+
             const validParams = parameters.filter(p => p.inputs.length > 0);
             const paramValue = validParams.length; // k = number of parameters
 
             if (validParams.length === 0) {
                 alert("No parameters with inputs");
+                generateBtn.textContent = "Generate Test Cases";
+                generateBtn.disabled = false;
                 return;
             }
 
@@ -1723,6 +1730,8 @@ if (strength > paramValue) {
             </p>
         </div>
     `;
+        generateBtn.textContent = "Generate Test Cases";
+    generateBtn.disabled = false;
     return;
 }
 
@@ -1731,6 +1740,24 @@ if (strength > paramValue) {
 
             const baseUrl = "/generate";
             const url = `${baseUrl}?strength=${strength}&values=${valuesStr}`;
+
+                section.style.display = 'block';
+
+    container.innerHTML = `
+        <div class="loading-message">
+            <div class="loading-spinner"></div>
+            <div>
+                Calculating test suite...<br>
+                <small>Please wait while the system processes your request</small>
+            </div>
+        </div>
+    `;
+
+    count.textContent = "Processing…";
+
+    const originalText = generateBtn.textContent;
+    generateBtn.textContent = "Processing…";
+    generateBtn.disabled = true;
 
             let raw;
             try {
@@ -1749,6 +1776,8 @@ if (strength > paramValue) {
                         <p>Please try again in a moment.</p>
                     </div>
                 `;
+                    generateBtn.textContent = originalText;
+                    generateBtn.disabled = false;
                 return;
             }
 
@@ -1759,6 +1788,9 @@ if (strength > paramValue) {
             const decoded = decodeBackendResult(raw, validParams);
 
             renderDecodedResults(decoded, strength);
+
+                generateBtn.textContent = originalText;
+                generateBtn.disabled = false;
         }
         
         function decodeRawResultToNames(raw) {
