@@ -1094,7 +1094,6 @@
 </div>
 
 <div id="optionB" style="display:none;">
-    <div class="main-container">
     <div class="input-row">
             <input type="text" id="paramInput" placeholder="Enter parameter name (e.g., 'Temperature', 'Browser', 'OS')">
             <button class="add-btn" onclick="addParameter()">Add Parameter</button>
@@ -1122,6 +1121,7 @@
             <p>Add your first parameter above to begin creating your testing matrix. Each parameter can have multiple input values.</p>
         </div>
         
+        <div class="main-container">
         <!-- Formula Box -->
         <div class="formula-box" id="formulaBox" style="display: none;">
             <div class="formula-title">Configuration Space</div>
@@ -1130,7 +1130,7 @@
                 Total possible combinations based on parameters and their inputs
             </div>
         </div>
-        
+    
         <!-- Strength Input -->
         <div class="strength-section" id="strengthSection" style="display: none;">
             <div class="strength-title">Generate Test Cases</div>
@@ -1141,6 +1141,7 @@
             <div class="btn-container">
                 <button class="generate-btn" onclick="generateTestCasesBackend()">Generate Test Cases</button>
             </div>
+        </div>
         </div>
         
         <!-- Test Cases Output -->
@@ -1156,7 +1157,6 @@
                 <!-- Test cases will appear here -->
             </div>
             </div>
-        </div>
         </div>
 </div>
 
@@ -1964,7 +1964,7 @@ if (strength > paramValue) {
 
             let footer = `Completed with ${count} test cases.`;
 
-            let finalText = `${header}\n${cleaned}\n${footer}`;
+            let finalText = `${header}\n\n${cleaned}\n\n${footer}`;
 
             let blob = new Blob([finalText], { type: "text/plain" });
             let link = document.createElement("a");
