@@ -30,7 +30,7 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: 
-                linear-gradient(rgba(15, 15, 15, 0.9), rgba(25, 25, 25, 0.95)),
+                linear-gradient(rgb(0, 0, 0), rgb(54, 54, 54)),
                 url('r99e_l0hq_210426.jpg');
             background-size: cover;
             background-repeat: no-repeat;
@@ -1146,6 +1146,37 @@
         <!-- Test Cases Output -->
         <div class="test-cases-section" id="testCasesSection">
             <div id="captureBoxB">
+
+                <!-- ✅ PNG HEADER -->
+    <div id="pngHeader" style="
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 18px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+">
+    <div style="
+        font-size: 16px;
+        font-weight: 600;
+        color: #e5e4e2;
+        margin-bottom: 6px;
+    ">
+        Configuration:
+        <span id="pngConfig" style="color:#34d399;"></span>
+    </div>
+
+    <div style="
+        font-size: 15px;
+        font-weight: 500;
+        color: #e5e4e2;
+    ">
+        Interaction Strength (t):
+        <span id="pngStrength" style="color:#60a5fa;"></span>
+    </div>
+</div>
+
             <div class="test-cases-title">Generated Test Cases</div>
             <div class="test-cases-count" id="testCasesCount">0 test cases generated</div>
             <div class="test-cases-container" id="testCasesContainer">
@@ -1172,9 +1203,9 @@
 
         <div class="developers">
             Developed by:<br>
-            Muhammad Aiman bin Mohd Asyraf, 
-            Assoc. Prof. Dr. Rozmie Razif B. Othman,
-            Ts. Dr. Mohd Zamri B. Zahir Ahmad, Ts. Dr. Ahmad Ashraf Abdul Halim,
+            Muhammad Aiman Mohd Asyraf, 
+            Assoc. Prof. Dr. Rozmie Razif Othman,
+            Ts. Dr. Mohd Zamri Zahir Ahmad, Ts. Dr. Ahmad Ashraf Abdul Halim,
             Murad Muhammad Hasan Salih Al-Walidi
         </div>
     </div>
@@ -1392,7 +1423,7 @@
             const box = document.getElementById("captureBox");
             const canvas = await html2canvas(box, { 
                 scale: 2,
-                backgroundColor: null
+                backgroundColor: "#0f172a"
             });
             const imgData = canvas.toDataURL("image/png");
             const link = document.createElement("a");
@@ -1850,7 +1881,19 @@ if (strength > paramValue) {
 
             const realCases = results.filter(r => r.match(/^\d+\)/));
 
+            // ✅ STORE FINAL STATE
+    lastRawResult = realCases.join("\n");
+    lastStrength = strength;
+    lastValues = parameters.filter(p => p.inputs.length > 0).map(p => p.inputs.length);
+
             count.textContent = `${realCases.length} test cases generated`;
+
+            // ✅ PNG HEADER DATA
+    pngStrength.textContent =
+    document.getElementById("strengthInput")?.value ?? strength;
+    document.getElementById("pngConfig").textContent =
+        lastValues.join(", ");
+        
             section.style.display = 'block';
             section.scrollIntoView({ behavior: 'smooth' });
         }
@@ -1968,17 +2011,39 @@ if (strength > paramValue) {
         }
 
         async function savePNGB() {
-            const box = document.getElementById("captureBoxB");
-            const canvas = await html2canvas(box, {
-                scale: 2,
-                backgroundColor: null
-            });
-            const imgData = canvas.toDataURL("image/png");
-            const link = document.createElement("a");
-            link.href = imgData;
-            link.download = "TestSuite.png";
-            link.click();
-        }
+    const box = document.getElementById("captureBoxB");
+    const container = document.getElementById("testCasesContainer");
+
+    // ✅ Save original styles
+    const originalMaxHeight = container.style.maxHeight;
+    const originalOverflow = container.style.overflowY;
+
+    // ✅ Expand to show ALL test cases
+    container.style.maxHeight = "none";
+    container.style.overflowY = "visible";
+
+    // Allow layout to update
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    const canvas = await html2canvas(box, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#0f172a",
+        windowWidth: box.scrollWidth,
+        windowHeight: box.scrollHeight
+    });
+
+    // ✅ Restore original styles
+    container.style.maxHeight = originalMaxHeight;
+    container.style.overflowY = originalOverflow;
+
+    const imgData = canvas.toDataURL("image/png");
+    const link = document.createElement("a");
+    link.href = imgData;
+    link.download = "SandCatGo_Full_TestSuite.png";
+    link.click();
+}
+
 
         function downloadTextB() {
     if (!lastRawResult) {
@@ -1986,20 +2051,38 @@ if (strength > paramValue) {
         return;
     }
 
-    let cleaned = decodeRawResultToNames(lastRawResult);
-    let count = cleaned.split("\n").length;
+    let outputText;
 
-    let header =
+    // ✅ Check if result already contains names (not numbers)
+    const hasNames = /[a-zA-Z]/.test(lastRawResult);
+
+    if (hasNames) {
+        // Already decoded (from XML import)
+        outputText = lastRawResult
+            .split("\n")
+            .filter(l => l.trim())
+            .join("\n");
+    } else {
+        // Numeric result → decode normally
+        outputText = decodeRawResultToNames(lastRawResult);
+    }
+
+    const count = outputText
+        .split("\n")
+        .filter(line => /^\d+\)/.test(line))
+        .length;
+
+    const header =
 `Test Suite
 Interaction Strength (t): ${lastStrength}
 Values: [${lastValues.join(", ")}]`;
 
-    let footer = `Completed with ${count} test cases.`;
+    const footer = `Completed with ${count} test cases.`;
 
-    let finalText = `${header}\n\n${cleaned}\n\n${footer}`;
+    const finalText = `${header}\n\n${outputText}\n\n${footer}`;
 
-    let blob = new Blob([finalText], { type: "text/plain" });
-    let link = document.createElement("a");
+    const blob = new Blob([finalText], { type: "text/plain" });
+    const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
     link.download = "TestSuite.txt";
     link.click();
