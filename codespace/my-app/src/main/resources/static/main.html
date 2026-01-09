@@ -493,12 +493,12 @@
             background: linear-gradient(135deg, #000000 0%, #606f83 100%);
             color: white;
             border: none;
-            padding: 14px 24px;
+            padding: 14px 35px;
             border-radius: 8px;
             cursor: pointer;
             font-size: 16px;
             font-weight: 600;
-            min-width: 100px;
+            min-width: 200px;
             transition: all 0.3s ease;
             box-shadow: 0 2px 5px rgba(49, 130, 206, 0.2);
         }
@@ -1101,7 +1101,6 @@
 
         <!-- XML Import / Export -->
         <div class="input-row">
-            <button class="add-btn" onclick="exportToXML()">Export XML</button>
             <input 
     type="file"
     id="xmlFileInput"
@@ -1182,9 +1181,10 @@
             <div class="test-cases-container" id="testCasesContainer">
                 <!-- Test cases will appear here -->
             </div>
-            <div class="btn-container" style="margin-bottom:15px;">
-                            <button class="generate-btn" onclick="savePNGB()">Save as PNG</button>
-                            <button class="generate-btn" onclick="downloadTextB()">Save as TXT</button>
+            <div class="btn-container" style="margin-bottom:5px; margin-top: 10px;">
+                            <button class="add-btn" onclick="savePNGB()">Save as PNG</button>
+                            <button class="add-btn" onclick="downloadTextB()">Save as TXT</button>
+                            <button class="add-btn" onclick="exportToXML()">Save as XML</button>
                         </div>
             </div>
         </div>
