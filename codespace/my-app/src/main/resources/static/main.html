@@ -1899,51 +1899,49 @@ if (strength > paramValue) {
         }
         
                 function exportToXML() {
-            if (parameters.length === 0) {
-                alert("No configuration to export.");
-                return;
-            }
+                if (parameters.length === 0) {
+                    alert("No configuration to export.");
+                    return;
+                }
 
-            const strength = document.getElementById('strengthInput')?.value || 2;
+                const strength = document.getElementById('strengthInput')?.value || 2;
 
-            let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
-            xml += `<combinatorialTestDesign>\n`;
-            xml += `  <interactionStrength>${strength}</interactionStrength>\n`;
-            xml += `  <parameters>\n`;
+                let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+                xml += `<combinatorialTestDesign>\n`;
+                xml += `  <interactionStrength>${strength}</interactionStrength>\n`;
+                xml += `  <parameters>\n`;
 
-            parameters.forEach(p => {
-                if (p.inputs.length === 0) return;
+                parameters.forEach(p => {
+                    if (p.inputs.length === 0) return;
 
-                xml += `    <parameter name="${escapeXML(p.name)}">\n`;
-                p.inputs.forEach(v => {
-                    xml += `      <value>${escapeXML(v)}</value>\n`;
+                    xml += `    <parameter name="${escapeXML(p.name)}">\n`;
+                    p.inputs.forEach(v => {
+                        xml += `      <value>${escapeXML(v)}</value>\n`;
+                    });
+                    xml += `    </parameter>\n`;
                 });
-                xml += `    </parameter>\n`;
-            });
 
-            xml += `  </parameters>\n`;
+                xml += `  </parameters>\n`;
 
-                        if (lastRawResult) {
-                const decodedForXML = decodeBackendResult(
-                    lastRawResult,
-                    parameters.filter(p => p.inputs.length > 0)
-                ).join("\n");
+                // ✅ OPTION B: export already-decoded NAMES
+                if (lastRawResult && lastRawResult.trim() !== "") {
+                    xml += `  <generatedTestSuite><![CDATA[\n`;
+                    xml += `${lastRawResult}\n`;
+                    xml += `  ]]></generatedTestSuite>\n`;
+                }
 
-                xml += `  <generatedTestSuite><![CDATA[\n${decodedForXML}\n]]></generatedTestSuite>\n`;
+                xml += `</combinatorialTestDesign>`;
+
+                const blob = new Blob([xml], { type: "application/xml" });
+                const url = URL.createObjectURL(blob);
+
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "tway-test-configuration.xml";
+                a.click();
+
+                URL.revokeObjectURL(url);
             }
-
-            xml += `</combinatorialTestDesign>`;
-
-            const blob = new Blob([xml], { type: "application/xml" });
-            const url = URL.createObjectURL(blob);
-
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "tway-test-configuration.xml";
-            a.click();
-
-            URL.revokeObjectURL(url);
-        }
 
         function escapeXML(str) {
             return str.replace(/[<>&'"]/g, c =>
